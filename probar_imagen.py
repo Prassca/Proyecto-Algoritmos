@@ -64,7 +64,7 @@ def evaluar_imagen(ruta_imagen):
         salida = modelo(tensor_img)
         probabilidad = torch.sigmoid(salida).item()
 
-    # Clasificar según umbral
+    
     if probabilidad >= 0.5:
         diagnostico = "GRIETA DETECTADA (Positive)"
         confianza = probabilidad * 100
@@ -78,10 +78,8 @@ def evaluar_imagen(ruta_imagen):
     print(f" Confianza: {confianza:.2f}%")
     print("==========================================")
 
-# --------------------------------------------------
-# INDICA AQUÍ LA RUTA DE TU IMAGEN
-# --------------------------------------------------
-# Puedes usar imágenes de prueba de tus carpetas o una ruta absoluta externa
+#### Probar
+
 mi_foto = os.path.join(ruta_proyecto, "Positive", "foto2.jpeg") 
 
-evaluar_imagen("/home/prasca/Documents/Proyecto Algoritmos/imagenes/como-reparar-grietas-dinamicas1.jpeg")
+evaluar_imagen("tu_ruta_de_imagen_aqui.jpg")  

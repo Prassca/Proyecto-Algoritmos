@@ -27,9 +27,8 @@ transform_eval = transforms.Compose([
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 ])
 
-# ==========================================
+
 # 2. CARGA Y DIVISIÓN DE DATOS (70% / 15% / 15%)
-# ==========================================
 
 class DatasetGrietas(Dataset):
     def __init__(self, root_dir, transform=None):
@@ -82,9 +81,9 @@ train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
 test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
-# ==========================================
+
 # 3. MODELO CNN + FEED-FORWARD (SIN SIGMOID FINAL)
-# ==========================================
+
 
 class DetectorGrietas(nn.Module):
     def __init__(self):
@@ -122,9 +121,9 @@ class DetectorGrietas(nn.Module):
 
 modelo = DetectorGrietas().to(device)
 
-# ==========================================
+
 # 4. ENTRENAMIENTO (ESTABILIZADO)
-# ==========================================
+
 
 criterio = nn.BCEWithLogitsLoss()
 optimizador = torch.optim.Adam(modelo.parameters(), lr=0.0001)
@@ -194,9 +193,9 @@ for epoca in range(epocas):
 
 print("Entrenamiento completado y modelo guardado exitosamente como 'modelo_grietas.pth'", flush=True)
 
-# ==========================================
+
 # 5. EVALUACIÓN FINAL EN TEST (15%)
-# ==========================================
+
 
 print("\n--- Evaluación Final en Test (15%) ---", flush=True)
 modelo.eval()
@@ -212,9 +211,8 @@ with torch.no_grad():
 test_acc = aciertos_test / test_size
 print(f"Precisión Final en Datos de Prueba (Test Accuracy): {test_acc*100:.2f}%", flush=True)
 
-# ==========================================
 # 6. MOSTRAR GRÁFICAS
-# ==========================================
+
 
 plt.figure(figsize=(12, 5))
 
