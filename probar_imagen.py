@@ -82,4 +82,7 @@ def evaluar_imagen(ruta_imagen):
 
 mi_foto = os.path.join(ruta_proyecto, "Positive", "foto2.jpeg") 
 
-evaluar_imagen("tu_ruta_de_imagen_aqui.jpg")  
+evaluar_imagen("tu_ruta_de_imagen_aqui.jpggggggggggggg") 
+# Comentario de prueba
+print("Prueba completada.")
+ 
