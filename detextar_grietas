@@ -122,7 +122,7 @@ class DetectorGrietas(nn.Module):
 modelo = DetectorGrietas().to(device)
 
 
-# 4. ENTRENAMIENTO (ESTABILIZADO)
+# 4. ENTRENAMIENTOOOOOOO
 
 
 criterio = nn.BCEWithLogitsLoss()
