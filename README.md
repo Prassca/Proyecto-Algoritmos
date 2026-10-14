@@ -40,7 +40,3 @@ El sistema utiliza una arquitectura de red neuronal profunda que consta de dos b
 Se implementó el optimizador Adam con una tasa de aprendizaje de 0.0001, minimizando la función de pérdida de entropía cruzada binaria con logits (BCEWithLogitsLoss).
 
 ---
-
-## Trazabilidad y Control de Versiones
-* **Historial de commits:** Un commit por avance, documentando las decisiones y modificaciones de código.
-* **Control de exclusiones (.gitignore):** Configurado para mantener el repositorio limpio y sin archivos pesados de datos o entornos virtuales.
