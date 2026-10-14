@@ -6,7 +6,7 @@ Repositorio oficial para el registro, desarrollo y evaluación del proyecto de v
 * **Asignatura:** Algoritmos y Programación
 * **Docente:** Jheyston Serrano
 * **Estudiantes:** 
-  * Kheylor Daniel Prasca Pedraza (2265075)
+  * Kheylor Daniel Prasca Pedraza (2264075)
   * Juan David Rojas Borray (2264163)
 * **Programa:** Ingeniería en Inteligencia Artificial (Segundo Semestre)
 * **Institución:** Universidad Industrial de Santander (UIS) - Barrancabermeja
