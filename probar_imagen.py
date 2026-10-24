@@ -15,7 +15,7 @@ transform_test = transforms.Compose([
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 ])
 
-# 3. Definición idéntica de la arquitectura CNN
+# 3. Definición idéntica de la arquitecturA CNN
 class DetectorGrietas(nn.Module):
     def __init__(self):
         super(DetectorGrietas, self).__init__()
@@ -37,6 +37,7 @@ class DetectorGrietas(nn.Module):
             nn.Flatten(),
             nn.Linear(128 * 28 * 28, 256),
             nn.ReLU(),
+        
             nn.Dropout(0.5),
             nn.Linear(256, 1)
         )
