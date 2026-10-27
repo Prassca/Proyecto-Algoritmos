@@ -13,6 +13,32 @@ Repositorio oficial para el registro, desarrollo y evaluación del proyecto de v
 
 ---
 
+## Instrucciones de Ejecución y Despliegue Web
+
+### 1. Instalación de Dependencias
+Asegúrate de instalar los requerimientos ejecutando en tu terminal:
+```bash
+pip install -r requirements.txt
+```
+
+### 2. Ejecución del Servidor Local
+Para iniciar la aplicación web en tu computadora:
+```bash
+python app.py
+```
+Abre en tu navegador: **`http://localhost:5000`**
+
+### 3. Acceso desde el Móvil mediante Cloudflare Tunnel (HTTPS)
+Para utilizar la cámara en tiempo real desde tu teléfono móvil sin bloqueos de seguridad del navegador:
+1. Mantén corriendo `python app.py` en tu terminal principal.
+2. Abre una segunda terminal y ejecuta el túnel seguro:
+   ```bash
+   ./cloudflared tunnel --url http://localhost:5000
+   ```
+3. Copia el enlace HTTPS generado (ejemplo: `https://xxxx.trycloudflare.com`) y ábrelo en el navegador de tu celular.
+
+---
+
 ## Estructura y Mapa de Recursos
 
 | Recurso / Archivo | Descripción de Contenido | Propósito en el Proyecto |
@@ -52,28 +78,4 @@ La aplicación cuenta con una interfaz web responsiva desarrollada en diseño mo
   * Grieta Severa / Peligrosa (Riesgo Estructural Alto)
 * **Dictamen y Recomendación Técnica:** Informe detallado que indica la posible causa raíz (asentamientos, sobrecargas, contracción por fraguado) y los pasos profesionales recomendados.
 
----
 
-## Instrucciones de Ejecución y Despliegue Web
-
-### 1. Instalación de Dependencias
-Asegúrate de instalar los requerimientos ejecutando en tu terminal:
-```bash
-pip install -r requirements.txt
-```
-
-### 2. Ejecución del Servidor Local
-Para iniciar la aplicación web en tu computadora:
-```bash
-python app.py
-```
-Abre en tu navegador: **`http://localhost:5000`**
-
-### 3. Acceso desde el Móvil mediante Cloudflare Tunnel (HTTPS)
-Para utilizar la cámara en tiempo real desde tu teléfono móvil sin bloqueos de seguridad del navegador:
-1. Mantén corriendo `python app.py` en tu terminal principal.
-2. Abre una segunda terminal y ejecuta el túnel seguro:
-   ```bash
-   ./cloudflared tunnel --url http://localhost:5000
-   ```
-3. Copia el enlace HTTPS generado (ejemplo: `https://xxxx.trycloudflare.com`) y ábrelo en el navegador de tu celular.
