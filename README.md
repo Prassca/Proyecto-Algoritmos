@@ -77,5 +77,3 @@ La aplicación cuenta con una interfaz web responsiva desarrollada en diseño mo
   * Grieta Leve / No Peligrosa (Superficial / Estética)
   * Grieta Severa / Peligrosa (Riesgo Estructural Alto)
 * **Dictamen y Recomendación Técnica:** Informe detallado que indica la posible causa raíz (asentamientos, sobrecargas, contracción por fraguado) y los pasos profesionales recomendados.
-
-
