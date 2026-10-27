@@ -61,30 +61,23 @@ transform_test = transforms.Compose([
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 ])
 
-def generar_mapa_termico(img_original, probabilidad):
-    """Genera una visualización tipo mapa térmico (JET/Ironbow) superpuesta según la severidad"""
+def procesar_imagen_preview(img_original):
+    """Convierte la imagen a escala con contraste realzado para mejor visualización limpia"""
     img_rgb = img_original.convert("RGB").resize((400, 400))
-    
-    # Escala de grises para detectar bordes/fisuras
-    gray = ImageOps.grayscale(img_rgb)
-    np_gray = np.array(gray, dtype=float)
-    
-    # Normalizar matriz
-    if np_gray.max() > np_gray.min():
-        np_gray = (np_gray - np_gray.min()) / (np_gray.max() - np_gray.min())
-    else:
-      np_gray = np.zeros_like(np_gray)
-
-    # Crear máscara de calor basada en probabilidad y texturas
-    heatmap = Image.fromarray(np.uint8(np_gray * 255), mode='L')
-    heatmap_colored = ImageOps.colorize(heatmap, black="blue", white="red")
-    
-    # Combinar imagen original con el mapa térmico translúcido
-    blend = Image.blend(img_rgb, heatmap_colored, alpha=0.4 if probabilidad > 0.5 else 0.15)
-    
+    enhancer = ImageEnhance.Contrast(img_rgb)
+    img_enhanced = enhancer.enhance(1.5)
     buffered = io.BytesIO()
-    blend.save(buffered, format="JPEG")
+    img_enhanced.save(buffered, format="JPEG")
     return base64.b64encode(buffered.getvalue()).decode('utf-8')
+
+def analizar_grosor_fisura(img_original):
+    """Calcula el porcentaje aproximado de área afectada por la fisura"""
+    gray = ImageOps.grayscale(img_original.resize((200, 200)))
+    np_gray = np.array(gray, dtype=float)
+    umbral = np_gray.mean() * 0.65
+    pixeles_fisura = np.sum(np_gray < umbral)
+    total_pixeles = np_gray.size
+    return (pixeles_fisura / total_pixeles) * 100
 
 @app.route('/')
 def index():
@@ -102,28 +95,45 @@ def predict():
     try:
         img = Image.open(file.stream).convert('RGB')
         
-        # Realce de contraste para microfisuras
-        enhancer = ImageEnhance.Contrast(img)
-        img_contrast = enhancer.enhance(1.8)
-
-        # Inferencia con PyTorch
-        tensor_img = transform_test(img_contrast).unsqueeze(0).to(device)
+        # Inferencia con la imagen original
+        tensor_img = transform_test(img).unsqueeze(0).to(device)
         with torch.no_grad():
             salida = modelo(tensor_img)
             probabilidad = torch.sigmoid(salida).item()
 
-        tiene_grieta = probabilidad >= 0.5
+        tiene_grieta = probabilidad >= 0.75
         confianza = (probabilidad * 100) if tiene_grieta else ((1 - probabilidad) * 100)
         
-        # Generar imagen con mapeo térmico
-        img_map_base64 = generar_mapa_termico(img, probabilidad)
+        # Determinar peligrosidad combinando probabilidad y área/grosor de la fisura con recomendaciones limpias
+        if not tiene_grieta:
+            es_peligrosa = False
+            diagnostico = "ESTRUCTURA SANA"
+            nivel_peligro = "Sin Riesgo"
+            recomendacion = "La estructura analizada se encuentra en óptimas condiciones. No se observan discontinuidades, fisuras ni fracturas superficiales o estructurales. Los elementos mantienen su integridad física íntegra sin evidencia de tensiones mecánicas."
+        else:
+            porcentaje_area = analizar_grosor_fisura(img)
+            if probabilidad >= 0.92 and porcentaje_area > 12.0:
+                es_peligrosa = True
+                diagnostico = "GRIETA SEVERA DETECTADA"
+                nivel_peligro = "PELIGROSA (Riesgo Estructural Alto)"
+                recomendacion = f"Se ha detectado una grieta severa con un nivel de certeza del {confianza:.1f}% y una afectación del {porcentaje_area:.1f}% en la zona evaluada.\n\n• Posible Causa: Sobrecarga mecánica, asentamiento diferencial del suelo o fatiga estructural.\n• Implicación: Riesgo potencial para la estabilidad y capacidad portante.\n• Acción: Suspender cargas cercanas y solicitar peritaje urgente por un ingeniero civil."
+            else:
+                es_peligrosa = False
+                diagnostico = "GRIETA LEVE DETECTADA"
+                nivel_peligro = "NO PELIGROSA (Superficial / Estética)"
+                recomendacion = f"Se ha identificado una fisura menor o superficial (certeza del {confianza:.1f}%, extensión del {porcentaje_area:.1f}%).\n\n• Posible Causa: Contracción por fraguado del material, cambios térmicos o asentamiento menor de acabados.\n• Implicación: Daño meramente estético, sin compromiso estructural.\n• Acción: Limpieza de la fisura, sellado elástico superficial y monitoreo periódico cada 6 meses."
+
+        img_preview_base64 = procesar_imagen_preview(img)
 
         return jsonify({
             'success': True,
-            'diagnostic': 'GRIETA DETECTADA' if tiene_grieta else 'ESTRUCTURA SANA (SIN GRIETAS)',
+            'diagnostic': diagnostico,
+            'danger_level': nivel_peligro,
+            'is_dangerous': bool(es_peligrosa),
             'confidence': f"{confianza:.2f}%",
+            'recommendation': recomendacion,
             'is_crack': bool(tiene_grieta),
-            'image_mapped': img_map_base64
+            'image_mapped': img_preview_base64
         })
     except Exception as e:
         return jsonify({'error': str(e)})

@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detección Inteligente de Grietas</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darker: '#121214',
+                        card: '#18181b',
+                        bordercolor: '#27272a'
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-darker text-zinc-100 min-h-screen font-sans selection:bg-zinc-700 selection:text-white pb-12">
+    <!-- Top Navbar -->
+    <nav class="border-b border-bordercolor bg-card/90 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-lg bg-zinc-800 border border-zinc-700 flex items-center justify-center">
+                    <i class="fa-solid fa-helmet-safety text-zinc-300"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-base text-zinc-100 tracking-tight">Detección Inteligente de Grietas</h1>
+                    <p class="text-xs text-zinc-400">Análisis Estructural por Inteligencia Artificial</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2">
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-zinc-800 text-zinc-300 border border-zinc-700">
+                    <span class="w-1.5 h-1.5 mr-1.5 rounded-full bg-emerald-500"></span> Sistema en Línea
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto px-4 py-8">
+        <!-- Mode Tabs -->
+        <div class="flex justify-center mb-8">
+            <div class="bg-card p-1 rounded-xl border border-bordercolor inline-flex shadow-lg">
+                <button id="tabUploadBtn" onclick="switchTab('upload')" class="px-5 py-2 rounded-lg font-medium text-xs bg-zinc-800 text-zinc-100 shadow transition-all flex items-center space-x-2">
+                    <i class="fa-solid fa-upload"></i>
+                    <span>Subir Imagen</span>
+                </button>
+                <button id="tabCameraBtn" onclick="switchTab('camera')" class="px-5 py-2 rounded-lg font-medium text-xs text-zinc-400 hover:text-zinc-200 transition-all flex items-center space-x-2">
+                    <i class="fa-solid fa-camera"></i>
+                    <span>Cámara en Vivo</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- Left Panel: Input (6 Cols) -->
+            <div class="lg:col-span-6 space-y-6">
+                <!-- Upload Section -->
+                <div id="uploadSection" class="bg-card border border-bordercolor rounded-2xl p-6 shadow-xl">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-sm font-semibold text-zinc-200 flex items-center">
+                            <i class="fa-solid fa-image mr-2 text-zinc-400"></i> Cargar Fotografía
+                        </h2>
+                        <span class="text-xs text-zinc-500">JPG, PNG</span>
+                    </div>
+
+                    <div id="dropZone" class="border-2 border-dashed border-zinc-700 hover:border-zinc-500 rounded-xl p-8 text-center cursor-pointer transition-all bg-zinc-900/50 relative group" onclick="document.getElementById('fileInput').click()">
+                        <input type="file" id="fileInput" accept="image/*" class="hidden" onchange="handleFileSelect(event)">
+                        <div id="uploadPlaceholder" class="space-y-3">
+                            <div class="w-12 h-12 mx-auto rounded-full bg-zinc-800 text-zinc-400 flex items-center justify-center">
+                                <i class="fa-solid fa-cloud-arrow-up text-lg"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs font-medium text-zinc-300">Haz clic para seleccionar o arrastra tu imagen</p>
+                            </div>
+                        </div>
+                        <div id="previewContainer" class="hidden relative">
+                            <img id="imagePreview" class="mx-auto max-h-72 rounded-lg object-contain shadow">
+                            <button onclick="event.stopPropagation(); resetUpload();" class="absolute top-2 right-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 w-7 h-7 rounded-full flex items-center justify-center border border-zinc-700">
+                                <i class="fa-solid fa-xmark text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button onclick="analyzeUpload()" id="btnAnalyzeUpload" class="w-full mt-5 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 font-semibold py-3 px-4 rounded-xl border border-zinc-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center space-x-2 text-xs" disabled>
+                        <i class="fa-solid fa-brain"></i>
+                        <span>Analizar Imagen con IA</span>
+                    </button>
+                </div>
+
+                <!-- Camera Section -->
+                <div id="cameraSection" class="hidden bg-card border border-bordercolor rounded-2xl p-6 shadow-xl">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-sm font-semibold text-zinc-200 flex items-center">
+                            <i class="fa-solid fa-video mr-2 text-zinc-400"></i> Cámara en Vivo
+                        </h2>
+                        <button onclick="switchCamera()" id="btnSwitchCam" class="text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-3 py-1.5 rounded-lg border border-zinc-700 hidden">
+                            <i class="fa-solid fa-rotate mr-1"></i> Cambiar
+                        </button>
+                    </div>
+
+                    <div class="relative bg-zinc-950 rounded-xl overflow-hidden aspect-video flex items-center justify-center border border-zinc-800">
+                        <video id="webcamVideo" autoplay playsinline class="w-full h-full object-cover hidden"></video>
+                        <canvas id="snapshotCanvas" class="hidden"></canvas>
+                        <div id="cameraPlaceholder" class="text-center p-6 space-y-2">
+                            <i class="fa-solid fa-video-slash text-3xl text-zinc-700"></i>
+                            <p class="text-xs text-zinc-500">Cámara inactiva</p>
+                        </div>
+                        <div id="scanOverlay" class="absolute inset-0 border border-zinc-600/30 pointer-events-none hidden">
+                            <div class="absolute inset-x-0 h-0.5 bg-zinc-400 shadow-[0_0_10px_#a1a1aa] animate-[scan_2s_ease-in-out_infinite]"></div>
+                        </div>
+                    </div>
+
+                    <div class="flex space-x-3 mt-5">
+                        <button id="btnToggleCamera" onclick="toggleCamera()" class="flex-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-semibold py-3 px-4 rounded-xl border border-zinc-700 transition-all flex items-center justify-center space-x-2 text-xs">
+                            <i class="fa-solid fa-power-off"></i>
+                            <span id="cameraBtnText">Encender Cámara</span>
+                        </button>
+                        <button id="btnCapture" onclick="captureAndAnalyze()" class="flex-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 font-semibold py-3 px-4 rounded-xl border border-zinc-700 transition-all flex items-center justify-center space-x-2 text-xs hidden" disabled>
+                            <i class="fa-solid fa-camera-retro"></i>
+                            <span>Capturar y Analizar</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Results & Recommendation (6 Cols) -->
+            <div class="lg:col-span-6 flex flex-col">
+                <div class="bg-card border border-bordercolor rounded-2xl p-6 shadow-xl flex-1 flex flex-col">
+                    <h2 class="text-sm font-semibold text-zinc-200 mb-4 flex items-center">
+                        <i class="fa-solid fa-clipboard-list mr-2 text-zinc-400"></i> Resultado y Dictamen Estructural
+                    </h2>
+
+                    <div id="resultsContent" class="flex-1 flex flex-col justify-center border border-zinc-800/80 rounded-xl p-6 bg-zinc-950/60 relative">
+                        <!-- Initial State -->
+                        <div id="initialState" class="text-center text-zinc-500 space-y-3 py-12">
+                            <div class="w-12 h-12 mx-auto rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-600">
+                                <i class="fa-solid fa-microscope text-lg"></i>
+                            </div>
+                            <p class="text-xs">Sube una fotografía o usa la cámara para generar el dictamen técnico.</p>
+                        </div>
+
+                        <!-- Loading State -->
+                        <div id="loadingState" class="hidden text-center space-y-4 py-12">
+                            <div class="w-10 h-10 mx-auto border-2 border-zinc-600 border-t-zinc-200 rounded-full animate-spin"></div>
+                            <p class="text-xs font-medium text-zinc-400">Analizando con red neuronal...</p>
+                        </div>
+
+                        <!-- Active Result State -->
+                        <div id="activeResult" class="hidden w-full space-y-5 text-left">
+                            <div class="grid grid-cols-2 gap-3">
+                                <div id="diagnosticBadge" class="p-3 rounded-xl font-bold text-center text-xs border flex items-center justify-center">
+                                    <!-- Diagnóstico -->
+                                </div>
+                                <div id="dangerBadge" class="p-3 rounded-xl font-bold text-center text-xs border flex items-center justify-center">
+                                    <!-- Peligrosidad -->
+                                </div>
+                            </div>
+
+                            <div class="bg-zinc-900 border border-zinc-800 p-3 rounded-xl">
+                                <span class="text-[10px] text-zinc-400 uppercase tracking-wider font-semibold block mb-1">Nivel de Confianza del Modelo</span>
+                                <div class="text-lg font-bold text-zinc-100" id="confidenceVal">--%</div>
+                            </div>
+
+                            <!-- Recommendation Box (Made Much Larger & Detailed) -->
+                            <div class="bg-zinc-900 border border-zinc-800 p-5 rounded-xl space-y-2">
+                                <div class="flex items-center space-x-2 text-zinc-300 text-xs font-bold uppercase tracking-wider">
+                                    <i class="fa-solid fa-circle-exclamation text-zinc-400"></i>
+                                    <span>Dictamen y Recomendación Técnica</span>
+                                </div>
+                                <p id="recommendationVal" class="text-sm md:text-base font-normal text-zinc-200 leading-relaxed whitespace-pre-line">
+                                    --
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <style>
+        @keyframes scan {
+            0% { top: 0%; }
+            50% { top: 100%; }
+            100% { top: 0%; }
+        }
+    </style>
+
+    <script>
+        let currentTab = 'upload';
+        let mediaStream = null;
+        let selectedFile = null;
+        let useFrontCamera = false;
+
+        function switchTab(tab) {
+            currentTab = tab;
+            const uploadSec = document.getElementById('uploadSection');
+            const cameraSec = document.getElementById('cameraSection');
+            const tabUploadBtn = document.getElementById('tabUploadBtn');
+            const tabCameraBtn = document.getElementById('tabCameraBtn');
+
+            if (tab === 'upload') {
+                uploadSec.classList.remove('hidden');
+                cameraSec.classList.add('hidden');
+                tabUploadBtn.className = "px-5 py-2 rounded-lg font-medium text-xs bg-zinc-800 text-zinc-100 shadow transition-all flex items-center space-x-2";
+                tabCameraBtn.className = "px-5 py-2 rounded-lg font-medium text-xs text-zinc-400 hover:text-zinc-200 transition-all flex items-center space-x-2";
+                stopCamera();
+            } else {
+                uploadSec.classList.add('hidden');
+                cameraSec.classList.remove('hidden');
+                tabCameraBtn.className = "px-5 py-2 rounded-lg font-medium text-xs bg-zinc-800 text-zinc-100 shadow transition-all flex items-center space-x-2";
+                tabUploadBtn.className = "px-5 py-2 rounded-lg font-medium text-xs text-zinc-400 hover:text-zinc-200 transition-all flex items-center space-x-2";
+            }
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                selectedFile = file;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('imagePreview').src = e.target.result;
+                    document.getElementById('uploadPlaceholder').classList.add('hidden');
+                    document.getElementById('previewContainer').classList.remove('hidden');
+                    document.getElementById('btnAnalyzeUpload').disabled = false;
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function resetUpload() {
+            selectedFile = null;
+            document.getElementById('fileInput').value = '';
+            document.getElementById('imagePreview').src = '';
+            document.getElementById('previewContainer').classList.add('hidden');
+            document.getElementById('uploadPlaceholder').classList.remove('hidden');
+            document.getElementById('btnAnalyzeUpload').disabled = true;
+        }
+
+        async function toggleCamera() {
+            const video = document.getElementById('webcamVideo');
+            const placeholder = document.getElementById('cameraPlaceholder');
+            const btnText = document.getElementById('cameraBtnText');
+            const btnCapture = document.getElementById('btnCapture');
+            const scanOverlay = document.getElementById('scanOverlay');
+            const btnSwitchCam = document.getElementById('btnSwitchCam');
+
+            if (mediaStream) {
+                stopCamera();
+            } else {
+                try {
+                    const constraints = {
+                        video: { facingMode: useFrontCamera ? 'user' : 'environment' }
+                    };
+                    mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+                    video.srcObject = mediaStream;
+                    video.classList.remove('hidden');
+                    placeholder.classList.add('hidden');
+                    scanOverlay.classList.remove('hidden');
+                    btnSwitchCam.classList.remove('hidden');
+                    btnText.innerText = 'Apagar Cámara';
+                    btnCapture.classList.remove('hidden');
+                    btnCapture.disabled = false;
+                } catch (err) {
+                    alert('No se pudo acceder a la cámara. Verifica los permisos de tu navegador.');
+                    console.error(err);
+                }
+            }
+        }
+
+        async function switchCamera() {
+            useFrontCamera = !useFrontCamera;
+            if (mediaStream) {
+                stopCamera();
+                await toggleCamera();
+            }
+        }
+
+        function stopCamera() {
+            if (mediaStream) {
+                mediaStream.getTracks().forEach(track => track.stop());
+                mediaStream = null;
+            }
+            const video = document.getElementById('webcamVideo');
+            const placeholder = document.getElementById('cameraPlaceholder');
+            const btnText = document.getElementById('cameraBtnText');
+            const btnCapture = document.getElementById('btnCapture');
+            const scanOverlay = document.getElementById('scanOverlay');
+            const btnSwitchCam = document.getElementById('btnSwitchCam');
+
+            video.classList.add('hidden');
+            placeholder.classList.remove('hidden');
+            scanOverlay.classList.add('hidden');
+            btnSwitchCam.classList.add('hidden');
+            btnText.innerText = 'Encender Cámara';
+            btnCapture.classList.add('hidden');
+        }
+
+        function showLoading() {
+            document.getElementById('initialState').classList.add('hidden');
+            document.getElementById('activeResult').classList.add('hidden');
+            document.getElementById('loadingState').classList.remove('hidden');
+        }
+
+        function showResults(data) {
+            document.getElementById('loadingState').classList.add('hidden');
+            const activeResult = document.getElementById('activeResult');
+            activeResult.classList.remove('hidden');
+
+            const badge = document.getElementById('diagnosticBadge');
+            const dangerBadge = document.getElementById('dangerBadge');
+
+            if (!data.is_crack) {
+                badge.className = "p-3 rounded-xl font-bold text-center text-xs bg-zinc-900 border border-zinc-700 text-zinc-200 flex items-center justify-center";
+                badge.innerHTML = `<i class="fa-solid fa-circle-check mr-2 text-emerald-400"></i> ${data.diagnostic}`;
+                dangerBadge.className = "p-3 rounded-xl font-bold text-center text-xs bg-zinc-900 border border-zinc-700 text-zinc-300 flex items-center justify-center";
+                dangerBadge.innerHTML = `<i class="fa-solid fa-shield mr-2 text-zinc-400"></i> ${data.danger_level}`;
+            } else if (data.is_dangerous) {
+                badge.className = "p-3 rounded-xl font-bold text-center text-xs bg-zinc-900 border border-red-500/50 text-red-400 flex items-center justify-center";
+                badge.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-2"></i> ${data.diagnostic}`;
+                dangerBadge.className = "p-3 rounded-xl font-bold text-center text-xs bg-zinc-900 border border-red-500/50 text-red-300 flex items-center justify-center";
+                dangerBadge.innerHTML = `<i class="fa-solid fa-radiation mr-2"></i> ${data.danger_level}`;
+            } else {
+                badge.className = "p-3 rounded-xl font-bold text-center text-xs bg-zinc-900 border border-amber-500/50 text-amber-400 flex items-center justify-center";
+                badge.innerHTML = `<i class="fa-solid fa-circle-exclamation mr-2"></i> ${data.diagnostic}`;
+                dangerBadge.className = "p-3 rounded-xl font-bold text-center text-xs bg-zinc-900 border border-amber-500/50 text-amber-300 flex items-center justify-center";
+                dangerBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-2"></i> ${data.danger_level}`;
+            }
+
+            document.getElementById('confidenceVal').innerText = data.confidence;
+            document.getElementById('recommendationVal').innerText = data.recommendation;
+        }
+
+        async function analyzeUpload() {
+            if (!selectedFile) return;
+            showLoading();
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showResults(result);
+                } else {
+                    alert(result.error || 'Error en la predicción');
+                    document.getElementById('loadingState').classList.add('hidden');
+                    document.getElementById('initialState').classList.remove('hidden');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Error al conectar con el servidor.');
+                document.getElementById('loadingState').classList.add('hidden');
+                document.getElementById('initialState').classList.remove('hidden');
+            }
+        }
+
+        async function captureAndAnalyze() {
+            const video = document.getElementById('webcamVideo');
+            const canvas = document.getElementById('snapshotCanvas');
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
+
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            showLoading();
+
+            canvas.toBlob(async (blob) => {
+                const formData = new FormData();
+                formData.append('file', blob, 'webcam_capture.jpg');
+
+                try {
+                    const response = await fetch('/predict', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        showResults(result);
+                    } else {
+                        alert(result.error || 'Error en la predicción');
+                        document.getElementById('loadingState').classList.add('hidden');
+                        document.getElementById('initialState').classList.remove('hidden');
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert('Error al conectar con el testigos del servidor.');
+                    document.getElementById('loadingState').classList.add('hidden');
+                    document.getElementById('initialState').classList.remove('hidden');
+                }
+            }, 'image/jpeg', 0.9);
+        }
+    </script>
+</body>
+</html>
