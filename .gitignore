@@ -1,4 +1,4 @@
-##
+## IMAGENES
 *.jpg
 *.png
 *.jpeg
@@ -6,4 +6,5 @@
 venv/
 env/
 .venv/
+#CARPERTAS INUTILES XD
 Positive/
