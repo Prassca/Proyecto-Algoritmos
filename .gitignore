@@ -5,3 +5,5 @@
 ## espacios virtuales
 venv/
 env/
+.venv/
+Positive/
