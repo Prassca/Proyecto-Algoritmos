@@ -2,20 +2,13 @@ import os
 import torch
 import torch.nn as nn
 from torchvision import transforms
-from PIL import Image
+from PIL import Image, ImageEnhance
 
 # 1. Configuración de dispositivo
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-ruta_proyecto = os.path.dirname(os.path.abspath(__file__))
+print(f"Dispositivo en uso: {device}")
 
-# 2. Transformaciones estándar para imágenes de prueba
-transform_test = transforms.Compose([
-    transforms.Resize((224, 224)),
-    transforms.ToTensor(),
-    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-])
-
-# 3. Definición idéntica de la arquitectura CNN
+# 2. Arquitectura CNN del modelo (idéntica a la del entrenamiento)
 class DetectorGrietas(nn.Module):
     def __init__(self):
         super(DetectorGrietas, self).__init__()
@@ -44,42 +37,88 @@ class DetectorGrietas(nn.Module):
     def forward(self, x):
         return self.feed_forward(self.features(x))
 
-# 4. Cargar pesos preentrenados
+# 3. Cargar el modelo entrenado
+ruta_pesos = 'modelo_grietas.pth'
 modelo = DetectorGrietas().to(device)
-ruta_pesos = os.path.join(ruta_proyecto, 'modelo_grietas.pth')
-modelo.load_state_dict(torch.load(ruta_pesos, map_location=device))
+
+if os.path.exists(ruta_pesos):
+    modelo.load_state_dict(torch.load(ruta_pesos, map_location=device))
+    print(f"-> Modelo cargado exitosamente desde: {ruta_pesos}")
+else:
+    print(f"-> ADVERTENCIA: No se encontró el archivo de pesos '{ruta_pesos}'.")
+
 modelo.eval()
 
-# 5. Función de predicción
+# 4. Transformaciones de prueba
+transform_test = transforms.Compose([
+    transforms.Resize((224, 224)),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+])
+
+# 5. Función para procesar y evaluar la imagen seleccionada
 def evaluar_imagen(ruta_imagen):
     if not os.path.exists(ruta_imagen):
-        print(f"Error: No se encontró la imagen en {ruta_imagen}")
+        print(f"\n[Error] La imagen '{ruta_imagen}' no existe.")
         return
 
-    # Cargar y preprocesar imagen
-    imagen = Image.open(ruta_imagen).convert('RGB')
-    tensor_img = transform_test(imagen).unsqueeze(0).to(device)
+    img = Image.open(ruta_imagen).convert('RGB')
+    
+    # Realce de contraste previo para destacar microfisuras
+    enhancer = ImageEnhance.Contrast(img)
+    img_contrast = enhancer.enhance(1.8)
+
+    tensor_img = transform_test(img_contrast).unsqueeze(0).to(device)
 
     with torch.no_grad():
         salida = modelo(tensor_img)
         probabilidad = torch.sigmoid(salida).item()
 
+    tiene_grieta = probabilidad >= 0.5
+    confianza = probabilidad * 100 if tiene_grieta else (1 - probabilidad) * 100
+
+    print("\n" + "="*45)
+    print(f" ARCHIVO ANALIZADO: {ruta_imagen}")
+    print("="*45)
+    print(f" Diagnóstico : {'GRIETA DETECTADA' if tiene_grieta else 'SIN GRIETA'}")
+    print(f" Confianza   : {confianza:.2f}%")
+    print("="*45 + "\n")
+
+if __name__ == '__main__':
+    print("\n=== SELECTOR INTERACTIVO DE PRUEBAS ===")
+    print("1. Carpeta 'Positive' (Con grietas)")
+    print("2. Carpeta 'Negative' (Sin grietas)")
     
-    if probabilidad >= 0.5:
-        diagnostico = "GRIETA DETECTADA (Positive)"
-        confianza = probabilidad * 100
+    opcion = input("\nElige una opción (1 o 2): ").strip()
+    
+    if opcion == '1':
+        carpeta = "Positive"
+    elif opcion == '2':
+        carpeta = "Negative"
     else:
-        diagnostico = "SIN GRIETA (Negative)"
-        confianza = (1 - probabilidad) * 100
+        print("Opción no válida.")
+        exit()
 
-    print("\n==========================================")
-    print(f" Archivo: {os.path.basename(ruta_imagen)}")
-    print(f" Resultado: {diagnostico}")
-    print(f" Confianza: {confianza:.2f}%")
-    print("==========================================")
+    if not os.path.exists(carpeta):
+        print(f"\n[Error] No se encontró la carpeta '{carpeta}' en el directorio del proyecto.")
+        exit()
 
-#### Probar
+    # Listar las primeras imágenes de la carpeta seleccionada
+    archivos = [f for f in os.listdir(carpeta) if f.lower().endswith(('png', 'jpg', 'jpeg'))]
+    
+    if not archivos:
+        print(f"\nLa carpeta '{carpeta}' no contiene imágenes.")
+        exit()
 
-mi_foto = os.path.join(ruta_proyecto, "Positive", "foto2.jpeg") 
+    print(f"\nMostrando algunas imágenes disponibles en '{carpeta}':")
+    for i, archivo in enumerate(archivos[:10]):  # Muestra hasta 10 ejemplos
+        print(f"  [{i}] {archivo}")
 
-evaluar_imagen("tu_ruta_de_imagen_aqui.jpggggggggggggg") 
+    nombre_imagen = input(f"\nEscribe el nombre exacto de la imagen que quieres probar (o presiona Enter para usar la primera): ").strip()
+    
+    if not nombre_imagen:
+        imagen_elegida = os.path.join(carpeta, archivos[0])
+    else:
+        imagen_elegida = os.path.join(carpeta, nombre_imagen)
+
+    evaluar_imagen(imagen_elegida)
